@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ContractAI Guardian — Local Development / Staging
+# Run: docker compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: contractai
+      POSTGRES_USER: contractai
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme_local}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contractai"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Redis (rate limiting, caching, celery broker) ───────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Backend API ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://contractai:${DB_PASSWORD:-changeme_local}@db:5432/contractai
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      S3_BUCKET: ${S3_BUCKET:-contractai-documents}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    volumes:
+      - vectorstore_data:/app/data/vectorstore
+
+  # ─── Frontend (Nginx + SPA) ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:
+  vectorstore_data:
