@@ -5,8 +5,6 @@
 services:
 
   db:
-    # In production, use managed database (RDS/Cloud SQL) instead.
-    # This service is disabled via profiles when using managed DB.
     profiles:
       - self-hosted-db
 
@@ -14,17 +12,12 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SECRET_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      S3_BUCKET: ${S3_BUCKET}
-      S3_REGION: ${S3_REGION}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       REDIS_URL: ${REDIS_URL}
       ENVIRONMENT: production
       LOG_LEVEL: warning
     deploy:
-      replicas: 3
+      replicas: 1
       resources:
         limits:
           cpus: "2.0"
@@ -39,7 +32,7 @@ services:
 
   frontend:
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           cpus: "0.5"

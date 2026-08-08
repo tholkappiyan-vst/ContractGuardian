@@ -32,7 +32,7 @@ COPY . .
 
 # Create non-root user
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
-RUN mkdir -p /app/data/vectorstore /app/data/uploads && chown -R appuser:appgroup /app/data
+RUN mkdir -p /app/data/vectorstore /app/data/uploads /app/data/eval_charts /app/data/eval_reports && chown -R appuser:appgroup /app/data
 USER appuser
 
 EXPOSE 8000

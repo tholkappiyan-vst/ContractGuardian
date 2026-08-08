@@ -1,51 +1,34 @@
 import uuid
-import boto3
+import os
+from pathlib import Path
 from fastapi import UploadFile
-from app.core.config import get_settings
 
-
-def _get_s3_client():
-    settings = get_settings()
-    kwargs = {
-        "region_name": settings.s3_region,
-        "aws_access_key_id": settings.aws_access_key_id,
-        "aws_secret_access_key": settings.aws_secret_access_key,
-    }
-    if settings.s3_endpoint_url:
-        kwargs["endpoint_url"] = settings.s3_endpoint_url
-    return boto3.client("s3", **kwargs)
+UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", "./data/uploads"))
 
 
 async def upload_file(file: UploadFile, user_id: str) -> tuple[str, int]:
-    """Upload file to S3, return (storage_key, file_size)."""
-    settings = get_settings()
+    """Upload file to local disk, return (storage_key, file_size)."""
     ext = file.filename.rsplit(".", 1)[-1].lower()
     storage_key = f"contracts/{user_id}/{uuid.uuid4()}.{ext}"
 
+    full_path = UPLOAD_DIR / storage_key
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+
     content = await file.read()
     file_size = len(content)
-
-    client = _get_s3_client()
-    client.put_object(
-        Bucket=settings.s3_bucket,
-        Key=storage_key,
-        Body=content,
-        ContentType=file.content_type or "application/octet-stream",
-    )
+    full_path.write_bytes(content)
 
     return storage_key, file_size
 
 
 async def download_file(storage_key: str) -> bytes:
-    """Download file content from S3."""
-    settings = get_settings()
-    client = _get_s3_client()
-    response = client.get_object(Bucket=settings.s3_bucket, Key=storage_key)
-    return response["Body"].read()
+    """Download file content from local disk."""
+    full_path = UPLOAD_DIR / storage_key
+    return full_path.read_bytes()
 
 
 async def delete_file(storage_key: str):
-    """Delete file from S3."""
-    settings = get_settings()
-    client = _get_s3_client()
-    client.delete_object(Bucket=settings.s3_bucket, Key=storage_key)
+    """Delete file from local disk."""
+    full_path = UPLOAD_DIR / storage_key
+    if full_path.exists():
+        full_path.unlink()

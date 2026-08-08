@@ -1,8 +1,9 @@
 import json
 import time
-from datetime import datetime, timezone
-from anthropic import Anthropic
-from app.core.config import get_settings
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from app.ai_engine.config import get_ai_settings
 
 ANALYSIS_SYSTEM_PROMPT = """You are a senior contract analyst. Analyze the provided contract and return a JSON object with the following structure. Be thorough, accurate, and explain everything in plain language a non-lawyer can understand.
 
@@ -119,59 +120,64 @@ Rules:
 COMPARISON_SYSTEM_PROMPT = """You are a contract comparison analyst. Compare two contracts and identify differences that matter to the reader.
 
 Output ONLY valid JSON:
-{
+{{
   "summary": "3-5 sentences comparing the contracts",
   "recommendation": "A|B|neither",
   "confidence": 0.0-1.0,
   "risk_a": 1-10,
   "risk_b": 1-10,
   "differences": [
-    {
+    {{
       "category": "string",
       "significance": "critical|major|minor|cosmetic",
       "contract_a": "what A says",
       "contract_b": "what B says",
       "impact": "what this means for you",
       "favors": "A|B|neutral"
-    }
+    }}
   ],
   "unchanged": ["list of unchanged categories"],
   "subtle_changes": [
-    {"clause": "reference", "change": "what changed", "significance": "why it matters"}
+    {{"clause": "reference", "change": "what changed", "significance": "why it matters"}}
   ]
-}
+}}
 """
 
 
-def _get_client() -> Anthropic:
-    return Anthropic(api_key=get_settings().anthropic_api_key)
+def _get_llm(temperature: float = 0.1) -> ChatGoogleGenerativeAI:
+    settings = get_ai_settings()
+    return ChatGoogleGenerativeAI(
+        model=settings.gemini_model,
+        google_api_key=settings.gemini_api_key,
+        temperature=temperature,
+        max_retries=settings.max_retries,
+        timeout=settings.request_timeout,
+    )
+
+
+def _parse_json(text: str) -> dict:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].rsplit("```", 1)[0]
+    return json.loads(text)
 
 
 async def analyze_contract(contract_text: str) -> dict:
-    """Run full analysis on contract text. Returns structured analysis dict."""
-    settings = get_settings()
-    client = _get_client()
+    """Run full analysis on contract text using Gemini. Returns structured analysis dict."""
+    llm = _get_llm(temperature=0.0)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", ANALYSIS_SYSTEM_PROMPT),
+        ("human", "Analyze this contract:\n\n{contract_text}"),
+    ])
+    chain = prompt | llm | StrOutputParser()
 
     start = time.time()
-    response = client.messages.create(
-        model=settings.anthropic_model,
-        max_tokens=16000,
-        system=ANALYSIS_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": f"Analyze this contract:\n\n{contract_text}"}],
-    )
-
+    result_text = await chain.ainvoke({"contract_text": contract_text})
     elapsed_ms = int((time.time() - start) * 1000)
-    raw = response.content[0].text
 
-    # Strip markdown code fences if present
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1].rsplit("```", 1)[0]
-
-    result = json.loads(raw)
+    result = _parse_json(result_text)
     result["_meta"] = {
-        "model_used": settings.anthropic_model,
-        "tokens_input": response.usage.input_tokens,
-        "tokens_output": response.usage.output_tokens,
+        "model_used": get_ai_settings().gemini_model,
         "processing_ms": elapsed_ms,
     }
     return result
@@ -179,41 +185,38 @@ async def analyze_contract(contract_text: str) -> dict:
 
 async def chat_about_contract(contract_text: str, messages: list[dict]) -> dict:
     """Answer a question about a contract given conversation history."""
-    settings = get_settings()
-    client = _get_client()
+    llm = _get_llm(temperature=0.2)
 
-    system = f"{CHAT_SYSTEM_PROMPT}\n\nContract text:\n{contract_text}"
+    last_question = messages[-1]["content"] if messages else ""
+    history = "\n".join(f"{m['role'].title()}: {m['content']}" for m in messages[:-1])
 
-    response = client.messages.create(
-        model=settings.anthropic_model,
-        max_tokens=4000,
-        system=system,
-        messages=messages,
-    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", CHAT_SYSTEM_PROMPT + "\n\nContract text:\n{contract_text}"),
+        ("human", "Previous conversation:\n{history}\n\nQuestion: {question}"),
+    ])
+    chain = prompt | llm | StrOutputParser()
+
+    result = await chain.ainvoke({
+        "contract_text": contract_text,
+        "history": history,
+        "question": last_question,
+    })
 
     return {
-        "content": response.content[0].text,
-        "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
-        "model_used": settings.anthropic_model,
+        "content": result,
+        "model_used": get_ai_settings().gemini_model,
     }
 
 
 async def compare_contracts(text_a: str, text_b: str) -> dict:
     """Compare two contracts and return structured diff."""
-    settings = get_settings()
-    client = _get_client()
+    llm = _get_llm(temperature=0.1)
 
-    user_msg = f"Compare these two contracts from my perspective (I'm about to choose one to sign).\n\nCONTRACT A:\n{text_a}\n\n---\n\nCONTRACT B:\n{text_b}"
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", COMPARISON_SYSTEM_PROMPT),
+        ("human", "Compare these two contracts from my perspective.\n\nCONTRACT A:\n{text_a}\n\n---\n\nCONTRACT B:\n{text_b}"),
+    ])
+    chain = prompt | llm | StrOutputParser()
 
-    response = client.messages.create(
-        model=settings.anthropic_model,
-        max_tokens=8000,
-        system=COMPARISON_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_msg}],
-    )
-
-    raw = response.content[0].text
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1].rsplit("```", 1)[0]
-
-    return json.loads(raw)
+    result_text = await chain.ainvoke({"text_a": text_a, "text_b": text_b})
+    return _parse_json(result_text)

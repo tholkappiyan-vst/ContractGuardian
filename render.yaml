@@ -6,7 +6,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     region: oregon
-    plan: starter
+    plan: free
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -22,35 +22,25 @@ services:
         generateValue: true
       - key: GEMINI_API_KEY
         sync: false
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: S3_BUCKET
-        value: contractai-documents
-      - key: S3_REGION
-        value: us-east-1
-      - key: AWS_ACCESS_KEY_ID
-        sync: false
-      - key: AWS_SECRET_ACCESS_KEY
-        sync: false
-      - key: S3_ENDPOINT_URL
-        sync: false
       - key: CORS_ORIGINS
         sync: false
       - key: ENVIRONMENT
         value: production
+      - key: UPLOAD_DIR
+        value: /app/data/uploads
       - key: CHROMA_PERSIST_DIR
         value: /app/data/vectorstore
 
   # Redis
   - type: redis
     name: contractai-redis
-    plan: starter
+    plan: free
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []
 
 databases:
   - name: contractai-db
-    plan: starter
+    plan: free
     databaseName: contractai
     user: contractai
     region: oregon
