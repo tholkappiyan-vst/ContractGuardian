@@ -25,6 +25,13 @@ payment, termination, liability, confidentiality, ip_rights, data_privacy,
 non_compete, warranty, dispute_resolution, penalties, force_majeure,
 assignment, governing_law, definitions, other
 
+For each clause also provide a risk_score (1-10) as an initial estimate:
+1-2: Standard, fair, balanced
+3-4: Slightly unfavorable but common
+5-6: Meaningfully one-sided
+7-8: Significantly risky
+9-10: Dangerous terms
+
 Output ONLY valid JSON array. No markdown, no explanation outside the JSON.
 
 Example output format:
@@ -36,6 +43,7 @@ Example output format:
     "body": "The Company shall pay Employee a base salary of...",
     "category": "payment",
     "subcategory": "compensation",
+    "risk_score": 2,
     "confidence": 0.95
   }}
 ]"""),
@@ -392,34 +400,13 @@ Provide the comparison as JSON."""),
 # =============================================================================
 
 CONTRACT_CHAT_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You answer questions about a specific contract. You ONLY answer based on the contract text provided — never from general knowledge.
-
-GROUNDING RULES:
-- ONLY reference content from the provided contract sections
-- QUOTE specific text that supports your answer (use quotation marks)
-- If the answer is NOT in the provided context, say: "This contract doesn't specifically address that."
-- NEVER guess, infer, or use general legal knowledge to fill gaps
-- Distinguish clearly: "The contract states..." vs "Typically in contracts like this..." (only use the former)
-- NEVER provide legal advice — you are explaining what the document says, not what the user should do
-
-RESPONSE FORMAT:
-- Lead with a direct answer to the question
-- Support with quoted text from the contract
-- Note any caveats or ambiguities
-- End with one relevant follow-up question they might want to ask
-
-TONE:
-- Plain language, no legal jargon without explanation
-- Use "you" and "they"
-- Be direct: "Yes, you can terminate..." not "The agreement provides for the possibility of..."
-"""),
-    ("human", """Question about the contract: {question}
-
-Relevant contract sections:
+    ("system", """You are a helpful contract assistant. Answer questions about the contract
+based ONLY on the provided text. Cite specific sections. Be concise."""),
+    ("human", """Contract text:
 {context}
 
 Previous conversation:
 {chat_history}
 
-Answer based ONLY on the contract text above."""),
+Question: {question}"""),
 ])

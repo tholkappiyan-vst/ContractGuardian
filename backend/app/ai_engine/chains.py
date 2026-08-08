@@ -38,8 +38,8 @@ def _parse_json(text: str) -> dict | list:
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def run_clause_extraction(contract_text: str) -> list[dict]:
@@ -51,8 +51,8 @@ async def run_clause_extraction(contract_text: str) -> list[dict]:
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def run_risk_analysis(
@@ -74,8 +74,8 @@ async def run_risk_analysis(
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def run_simple_explanation(
@@ -95,8 +95,8 @@ async def run_simple_explanation(
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def run_contract_summary(contract_text: str, context: str = "") -> dict:
@@ -111,8 +111,8 @@ async def run_contract_summary(contract_text: str, context: str = "") -> dict:
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def run_negotiation_advice(
@@ -138,8 +138,8 @@ async def run_negotiation_advice(
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def run_contract_comparison(

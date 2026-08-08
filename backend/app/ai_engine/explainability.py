@@ -242,7 +242,9 @@ class TextSHAP:
         "unlimited": 0.9, "irrevocable": 0.85, "perpetual": 0.8,
         "sole": 0.7, "exclusive": 0.7, "waive": 0.8, "waiver": 0.8,
         "indemnify": 0.75, "indemnification": 0.75, "indemnity": 0.75,
-        "liquidated damages": 0.85, "consequential": 0.7,
+        "terminate": 0.6, "immediately": 0.5,
+        "liquidated": 0.8, "consequential": 0.7,
+        "liquidated damages": 0.85,
         "terminate immediately": 0.8, "without cause": 0.75,
         "at its sole discretion": 0.85, "non-refundable": 0.7,
         "non-compete": 0.7, "non-solicitation": 0.65,
@@ -253,15 +255,19 @@ class TextSHAP:
         "automatically renews": 0.65, "auto-renewal": 0.65,
         "binding arbitration": 0.6, "class action waiver": 0.75,
         "unilateral": 0.8, "unconditional": 0.7,
+        "personally": 0.75, "jointly": 0.6, "severally": 0.6,
         "personal liability": 0.85, "jointly and severally": 0.8,
         "no liability": 0.6, "as-is": 0.5,
         # Risk-reducing language (negative = decreases risk)
         "mutual": -0.4, "reasonable": -0.3, "reasonably": -0.3,
         "good faith": -0.3, "best efforts": -0.2,
+        "consent": -0.2, "notice": -0.2,
         "written consent": -0.3, "prior written notice": -0.35,
         "30 days": -0.2, "cure period": -0.4,
-        "limited to": -0.3, "not to exceed": -0.35, "cap": -0.3,
+        "limited": -0.3, "cap": -0.3,
+        "limited to": -0.3, "not to exceed": -0.35,
         "proportional": -0.25, "pro rata": -0.2,
+        "either": -0.2, "both": -0.2,
         "either party": -0.3, "both parties": -0.3,
     }
 
@@ -334,8 +340,7 @@ class TextLIME:
             r"\b(worldwide|perpetual|irrevocable)\b",
         ],
         "one_sided_obligation": [
-            r"\b(shall|must|obligated to|required to)\b(?!.*\b(either party|both parties|mutual)\b)",
-            r"\b(sole discretion|unilateral|at .{0,20} option)\b",
+            r"\b(sole discretion|unilateral|shall not)\b",
             r"\b(without .{0,15} consent)\b",
         ],
         "penalty_exposure": [
@@ -344,22 +349,19 @@ class TextLIME:
             r"\b(interest .{0,10} per (month|annum|day))\b",
         ],
         "weak_exit_rights": [
-            r"\b(no right to terminate|cannot terminate|irrevocable)\b",
-            r"\b(automatic.{0,10} renew|auto-renew)\b",
-            r"\b(minimum term|lock-in|commitment period)\b",
+            r"\b(irrevocable|auto.?renew|lock.?in|cannot terminate)\b",
+            r"\b(minimum term|commitment period)\b",
         ],
         "liability_amplifier": [
-            r"\b(indemnif|hold harmless|defend and indemnify)\b",
+            r"\b(indemnif|hold harmless|jointly and severally)\b",
             r"\b(consequential|incidental|special damages)\b",
-            r"\b(jointly and severally|personal.{0,5} liab)\b",
         ],
         "ip_transfer": [
-            r"\b(assign.{0,15} all .{0,10}(rights|ip|intellectual property))\b",
-            r"\b(work.{0,5}for.{0,5}hire|work made for hire)\b",
+            r"\b(assign.{0,10}(rights|ip)|work.?for.?hire|exclusive.{0,10}property)\b",
             r"\b(exclusive license|transfer of ownership)\b",
         ],
         "confidentiality_burden": [
-            r"\b(perpetual.{0,10} confidential|indefinite.{0,10} obligation)\b",
+            r"\b(perpetual.{0,10} confidential|indefinite)\b",
             r"\b(return or destroy)\b",
             r"\b(injunctive relief|irreparable harm)\b",
         ],
@@ -436,14 +438,14 @@ class TextLIME:
 
     def _humanize_factor(self, factor_name: str) -> str:
         mapping = {
-            "unlimited_scope": "Unlimited or uncapped scope",
+            "unlimited_scope": "Unlimited scope",
             "one_sided_obligation": "One-sided obligation",
-            "penalty_exposure": "Financial penalty exposure",
-            "weak_exit_rights": "Weak exit/termination rights",
+            "penalty_exposure": "Penalty exposure",
+            "weak_exit_rights": "Weak exit rights",
             "liability_amplifier": "Liability amplification",
-            "ip_transfer": "IP rights transfer",
-            "confidentiality_burden": "Excessive confidentiality burden",
-            "dispute_disadvantage": "Dispute resolution disadvantage",
+            "ip_transfer": "IP transfer",
+            "confidentiality_burden": "Confidentiality burden",
+            "dispute_disadvantage": "Dispute disadvantage",
         }
         return mapping.get(factor_name, factor_name.replace("_", " ").title())
 
@@ -471,8 +473,8 @@ def _parse_json(text: str) -> dict:
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def _llm_clause_explanation(
@@ -496,8 +498,8 @@ async def _llm_clause_explanation(
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(multiplier=1, min=5, max=60),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def _llm_global_explanation(

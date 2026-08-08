@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class AIEngineSettings(BaseSettings):
     gemini_api_key: str
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-flash-latest"
     gemini_embedding_model: str = "models/text-embedding-004"
 
     chroma_persist_dir: str = "./data/vectorstore"
@@ -14,7 +14,7 @@ class AIEngineSettings(BaseSettings):
     chunk_overlap: int = 200
     retrieval_top_k: int = 8
 
-    max_retries: int = 3
+    max_retries: int = 6
     request_timeout: int = 120
 
     class Config:
