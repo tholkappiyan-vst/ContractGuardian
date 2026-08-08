@@ -4,7 +4,6 @@ import { Brain, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight, Lig
 import { api } from '@/lib/api'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { RiskBadge } from '@/components/ui/RiskBadge'
-import { riskColor } from '@/lib/utils'
 
 interface WordAttribution {
   word: string

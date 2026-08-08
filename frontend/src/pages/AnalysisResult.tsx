@@ -13,7 +13,7 @@ export function AnalysisResult() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [clauses, setClauses] = useState<Clause[]>([])
   const [risks, setRisks] = useState<RiskScore[]>([])
-  const [negotiations, setNegotiations] = useState<NegotiationSuggestion[]>([])
+  const [_negotiations, setNegotiations] = useState<NegotiationSuggestion[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

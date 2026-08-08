@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { GitCompare, ArrowRight, CheckCircle, XCircle, Minus } from 'lucide-react'
+import { GitCompare, ArrowRight } from 'lucide-react'
 import { api } from '@/lib/api'
 import { RiskGauge } from '@/components/ui/RiskGauge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'

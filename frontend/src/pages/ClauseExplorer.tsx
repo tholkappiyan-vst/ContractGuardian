@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight, Search } from 'lucide-react'
 import { api } from '@/lib/api'
 import { RiskBadge } from '@/components/ui/RiskBadge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { categoryLabel, cn } from '@/lib/utils'
+import { categoryLabel } from '@/lib/utils'
 import type { Clause } from '@/types'
 
 export function ClauseExplorer() {

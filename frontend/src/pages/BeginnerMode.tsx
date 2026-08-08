@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import {
   GraduationCap, AlertTriangle, HelpCircle, CheckSquare,
   MessageCircle, ChevronDown, ChevronRight, Lightbulb,
-  Shield, BookOpen, Eye, ThumbsUp, ThumbsDown,
+  Shield, BookOpen, Eye,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'

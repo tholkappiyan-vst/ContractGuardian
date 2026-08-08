@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Upload, FileText, AlertTriangle,
-  MessageSquare, GitCompare, Scale, Shield,
+  GitCompare, Scale, Shield,
 } from 'lucide-react'
 
 const links = [
