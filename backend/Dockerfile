@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
     libmagic1 \
     libpq-dev \
+    g++ \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
