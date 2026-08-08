@@ -24,7 +24,7 @@ matplotlib>=3.8.0
 
 # AI Engine (LangChain + Gemini + Vector DB)
 langchain==0.3.0
-langchain-core==0.3.0
+langchain-core==0.3.15
 langchain-community==0.3.0
 langchain-google-genai==2.0.0
 langchain-chroma==0.2.0
