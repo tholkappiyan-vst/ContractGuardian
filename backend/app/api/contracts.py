@@ -25,8 +25,7 @@ def _check_file(file: UploadFile):
 
 
 async def _check_quota(user: User, db: AsyncSession):
-    if user.contracts_used >= user.contracts_limit:
-        raise RateLimitError()
+    pass
 
 
 @router.post("", response_model=ContractResponse, status_code=status.HTTP_201_CREATED)
