@@ -8,24 +8,24 @@ from app.ai_engine.config import get_ai_settings
 ANALYSIS_SYSTEM_PROMPT = """You are a senior contract analyst. Analyze the provided contract and return a JSON object with the following structure. Be thorough, accurate, and explain everything in plain language a non-lawyer can understand.
 
 Output ONLY valid JSON matching this schema:
-{
-  "contract_type": {"type": "string", "confidence": 0.0-1.0},
-  "parties": [{"name": "string", "role": "string", "type": "individual|corporate"}],
-  "dates": {
+{{
+  "contract_type": {{"type": "string", "confidence": 0.0-1.0}},
+  "parties": [{{"name": "string", "role": "string", "type": "individual|corporate"}}],
+  "dates": {{
     "effective": "ISO date or null",
     "expiration": "ISO date or null",
-    "renewal": {"type": "auto|manual|none", "terms": "string"}
-  },
-  "payment_summary": {
-    "total_value": {"amount": "number or null", "currency": "string"},
+    "renewal": {{"type": "auto|manual|none", "terms": "string"}}
+  }},
+  "payment_summary": {{
+    "total_value": {{"amount": "number or null", "currency": "string"}},
     "schedule": "string description"
-  },
-  "obligations": {
+  }},
+  "obligations": {{
     "party_a": ["obligation strings"],
     "party_b": ["obligation strings"]
-  },
+  }},
   "clauses": [
-    {
+    {{
       "index": 0,
       "section_number": "string or null",
       "title": "string",
@@ -35,28 +35,28 @@ Output ONLY valid JSON matching this schema:
       "confidence": 0.0-1.0,
       "risk_score": 1-10,
       "is_standard": true/false,
-      "explanation": {
+      "explanation": {{
         "tldr": "one sentence",
         "what_it_means": "2-3 sentences, grade 8 reading level",
         "why_care": "1-2 sentences, personal stakes",
         "consequence": "worst case scenario, concrete",
         "negotiate": "actionable suggestion or null"
-      }
-    }
+      }}
+    }}
   ],
   "entities": [
-    {
+    {{
       "entity_type": "person|organization|date|money|percent|duration|payment_term|penalty|liability_term|obligation|termination_condition|deadline|restriction",
       "value": "canonical value",
       "original_text": "as in contract",
-      "normalized": {"structured": "form"} or null,
+      "normalized": {{"structured": "form"}} or null,
       "confidence": 0.0-1.0,
       "role": "string or null",
       "clause_index": 0
-    }
+    }}
   ],
   "risks": [
-    {
+    {{
       "clause_index": 0,
       "scope": "clause",
       "score": 1-10,
@@ -67,24 +67,24 @@ Output ONLY valid JSON matching this schema:
       "affected_party": "string",
       "is_standard": true/false,
       "standard_note": "what standard would be, or null"
-    }
+    }}
   ],
-  "overall_risk": {
+  "overall_risk": {{
     "score": 1-10,
     "label": "low|moderate|elevated|high|critical",
     "summary": "2-3 sentences"
-  },
+  }},
   "executive_summary": "3-5 sentences summarizing the contract for a non-lawyer",
   "top_risks": [
-    {"rank": 1, "clause_index": 0, "summary": "one sentence", "score": 1-10}
+    {{"rank": 1, "clause_index": 0, "summary": "one sentence", "score": 1-10}}
   ],
-  "action_items": {
+  "action_items": {{
     "negotiate": ["items"],
     "verify": ["items"],
     "acceptable": ["items"]
-  },
+  }},
   "negotiations": [
-    {
+    {{
       "clause_index": 0,
       "difficulty": "easy|medium|hard",
       "label": "short title",
@@ -93,9 +93,9 @@ Output ONLY valid JSON matching this schema:
       "explanation": "why this is better",
       "talking_points": ["conversational points"],
       "likelihood": "high|medium|low"
-    }
+    }}
   ]
-}
+}}
 
 Rules:
 - Score risk from the READER's perspective (they uploaded this, they're about to sign it)
