@@ -159,12 +159,12 @@ async def explain_contract(
 
     # Get all clauses with their risk scores
     clauses_result = await db.execute(
-        select(Clause).where(Clause.analysis_id == analysis.id)
+        select(Clause).where(Clause.contract_id == contract_id)
     )
     clauses = clauses_result.scalars().all()
 
     risks_result = await db.execute(
-        select(RiskScore).where(RiskScore.analysis_id == analysis.id)
+        select(RiskScore).where(RiskScore.contract_id == contract_id)
     )
     risks = risks_result.scalars().all()
 
