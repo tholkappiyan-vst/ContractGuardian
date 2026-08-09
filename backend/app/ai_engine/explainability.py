@@ -473,8 +473,8 @@ def _parse_json(text: str) -> dict:
 
 
 @retry(
-    stop=stop_after_attempt(6),
-    wait=wait_exponential(multiplier=1, min=5, max=60),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def _llm_clause_explanation(
@@ -498,8 +498,8 @@ async def _llm_clause_explanation(
 
 
 @retry(
-    stop=stop_after_attempt(6),
-    wait=wait_exponential(multiplier=1, min=5, max=60),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
     retry=retry_if_exception_type((ResourceExhausted, json.JSONDecodeError)),
 )
 async def _llm_global_explanation(

@@ -191,13 +191,14 @@ async def explain_contract(
     ]
     scoring_result = score_from_ai_output(ai_risks)
 
-    # Run explainability engine
+    # Run explainability engine (limit LLM calls to avoid timeout)
     engine = _get_explainability_engine()
     result = await engine.explain_contract(
         clause_risks=clause_risks,
         scoring_result=scoring_result,
         contract_type=contract.contract_type or "general",
         user_role="the person signing",
+        max_clauses=3,
     )
 
     global_exp = result.global_explanation
