@@ -1,21 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Brain, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight, Lightbulb, Shield } from 'lucide-react'
+import { AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight, Lightbulb, Shield, Brain } from 'lucide-react'
 import { api } from '@/lib/api'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { RiskBadge } from '@/components/ui/RiskBadge'
-
-interface WordAttribution {
-  word: string
-  score: number
-}
-
-interface RiskFactor {
-  factor: string
-  weight: number
-  evidence: string
-  dimension: string
-}
 
 interface ClauseExplanation {
   clause_id: string
@@ -60,24 +48,10 @@ interface GlobalExplanation {
   metadata: Record<string, any>
 }
 
-interface DetailedClauseExplanation {
-  clause_id: string
-  risk_score: number
-  why_risky: string
-  reasoning_chain: string[]
-  important_words: string[]
-  risk_factors: RiskFactor[]
-  word_attributions: WordAttribution[]
-  confidence: number
-}
-
 export function Explainability() {
   const { id } = useParams<{ id: string }>()
   const [globalData, setGlobalData] = useState<GlobalExplanation | null>(null)
-  const [selectedClause, setSelectedClause] = useState<DetailedClauseExplanation | null>(null)
   const [loadingGlobal, setLoadingGlobal] = useState(true)
-  const [loadingClause, setLoadingClause] = useState(false)
-  const [activeTab, setActiveTab] = useState<'global' | 'local'>('global')
   const [expandedConcern, setExpandedConcern] = useState<number | null>(null)
 
   useEffect(() => {
@@ -87,15 +61,6 @@ export function Explainability() {
       setLoadingGlobal(false)
     })
   }, [id])
-
-  const handleClauseClick = async (clauseId: string) => {
-    if (!id) return
-    setLoadingClause(true)
-    setActiveTab('local')
-    const data = await api.explainClause(id, clauseId)
-    setSelectedClause(data)
-    setLoadingClause(false)
-  }
 
   if (loadingGlobal) return <LoadingSpinner className="mt-20" />
   if (!globalData) return <p>No explanation available</p>
@@ -121,28 +86,9 @@ export function Explainability() {
           </h1>
           <p className="text-gray-500 mt-1">Understand why your contract received this risk score</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('global')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              activeTab === 'global' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Global View
-          </button>
-          <button
-            onClick={() => setActiveTab('local')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              activeTab === 'local' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Clause Detail
-          </button>
-        </div>
       </div>
 
-      {activeTab === 'global' && (
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Recommendation Banner */}
           <div className={`rounded-xl p-6 border-2 ${
             globalData.risk_level === 'high' ? 'bg-red-50 border-red-200' :
@@ -278,12 +224,6 @@ export function Explainability() {
                       <p className="text-sm font-medium text-gray-900">{driver.clause_title}</p>
                       <p className="text-xs text-gray-600 mt-0.5">{driver.reason}</p>
                     </div>
-                    <button
-                      onClick={() => handleClauseClick(driver.clause_id)}
-                      className="ml-auto text-xs text-purple-600 hover:underline flex-shrink-0"
-                    >
-                      Explain
-                    </button>
                   </div>
                 ))}
               </div>
@@ -311,10 +251,9 @@ export function Explainability() {
               <h3 className="font-semibold text-gray-900 mb-4">Clause Explanations (Top {globalData.clause_explanations.length})</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {globalData.clause_explanations.map(ce => (
-                  <button
+                  <div
                     key={ce.clause_id}
-                    onClick={() => handleClauseClick(ce.clause_id)}
-                    className="text-left p-4 border border-gray-100 rounded-lg hover:border-purple-200 hover:bg-purple-50/50 transition"
+                    className="text-left p-4 border border-gray-100 rounded-lg"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <RiskBadge score={ce.risk_score * 10} />
@@ -330,131 +269,13 @@ export function Explainability() {
                         ))}
                       </div>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-      )}
-
-      {/* LOCAL TAB */}
-      {activeTab === 'local' && (
-        <div>
-          {loadingClause && <LoadingSpinner className="mt-10" />}
-          {!loadingClause && !selectedClause && (
-            <div className="text-center py-20 text-gray-500">
-              <Brain className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-              <p>Click on a clause from the Global View to see its detailed explanation</p>
-            </div>
-          )}
-          {!loadingClause && selectedClause && (
-            <div className="space-y-6">
-              {/* Why Risky */}
-              <div className="card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Why is this clause risky?</h3>
-                  <div className="flex items-center gap-2">
-                    <RiskBadge score={selectedClause.risk_score * 10} />
-                    <span className="text-xs text-gray-500">
-                      Confidence: {(selectedClause.confidence * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <p className="text-gray-700 leading-relaxed">{selectedClause.why_risky}</p>
-              </div>
-
-              {/* Reasoning Chain */}
-              <div className="card p-6">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5 text-amber-500" /> Chain of Thought
-                </h3>
-                <div className="space-y-3">
-                  {selectedClause.reasoning_chain.map((step, i) => (
-                    <div key={i} className="flex gap-3">
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">
-                        {i + 1}
-                      </div>
-                      <p className="text-gray-700 pt-1 text-sm">{step}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Important Words (SHAP) */}
-              <div className="card p-6">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Target className="w-5 h-5 text-indigo-500" /> Important Words (SHAP Attribution)
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedClause.important_words.map(word => (
-                    <span key={word} className="px-3 py-1.5 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg text-sm font-medium">
-                      {word}
-                    </span>
-                  ))}
-                </div>
-                {selectedClause.word_attributions.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-xs text-gray-500 mb-2">Word Attribution Scores (positive = increases risk)</p>
-                    <div className="space-y-1">
-                      {selectedClause.word_attributions.slice(0, 12).map((wa, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="w-28 text-xs text-gray-700 truncate font-mono">{wa.word}</span>
-                          <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden relative">
-                            {wa.score > 0 ? (
-                              <div
-                                className="absolute left-1/2 h-full bg-red-400 rounded-r-full"
-                                style={{ width: `${Math.min(50, Math.abs(wa.score) * 50)}%` }}
-                              />
-                            ) : (
-                              <div
-                                className="absolute right-1/2 h-full bg-green-400 rounded-l-full"
-                                style={{ width: `${Math.min(50, Math.abs(wa.score) * 50)}%` }}
-                              />
-                            )}
-                          </div>
-                          <span className={`w-12 text-xs text-right font-mono ${wa.score > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {wa.score > 0 ? '+' : ''}{wa.score.toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Risk Factors (LIME) */}
-              <div className="card p-6">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-500" /> Risk Factors (LIME Analysis)
-                </h3>
-                <div className="space-y-3">
-                  {selectedClause.risk_factors.map((rf, i) => (
-                    <div key={i} className="p-3 border border-gray-100 rounded-lg">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm text-gray-900">{rf.factor}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">{rf.dimension}</span>
-                          <span className="text-xs font-mono text-gray-500">{(rf.weight * 100).toFixed(0)}%</span>
-                        </div>
-                      </div>
-                      {rf.evidence && (
-                        <p className="text-xs text-gray-600 mt-1 italic">"{rf.evidence}"</p>
-                      )}
-                      <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-orange-400 rounded-full"
-                          style={{ width: `${rf.weight * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      </div>
     </div>
   )
 }

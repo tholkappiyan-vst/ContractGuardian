@@ -30,7 +30,7 @@ export function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.full_name?.split(' ')[0]}</h1>
-          <p className="text-gray-500 mt-1">{user?.contracts_used}/{user?.contracts_limit} contracts used this month</p>
+          <p className="text-gray-500 mt-1">{user?.contracts_used} contracts analyzed</p>
         </div>
         <Link to="/upload" className="btn-primary flex items-center gap-2">
           <Upload className="w-4 h-4" /> Upload Contract

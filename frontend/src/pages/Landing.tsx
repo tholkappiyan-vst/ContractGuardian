@@ -44,7 +44,7 @@ export function Landing() {
                 Log In
               </Link>
             </div>
-            <p className="mt-4 text-sm text-gray-500">Free plan: 3 contracts/month. No credit card required.</p>
+            <p className="mt-4 text-sm text-gray-500">Free to use. No credit card required.</p>
           </div>
         </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/50 to-white" />
