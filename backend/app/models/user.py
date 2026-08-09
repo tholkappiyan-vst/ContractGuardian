@@ -15,7 +15,7 @@ class User(Base):
     account_type: Mapped[str] = mapped_column(String, default="individual")
     plan: Mapped[str] = mapped_column(String, default="free")
     contracts_used: Mapped[int] = mapped_column(Integer, default=0)
-    contracts_limit: Mapped[int] = mapped_column(Integer, default=3)
+    contracts_limit: Mapped[int] = mapped_column(Integer, default=50)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

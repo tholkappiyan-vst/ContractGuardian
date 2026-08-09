@@ -35,7 +35,13 @@ export const api = {
       method: 'POST',
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: formData,
-    }).then(r => r.json()),
+    }).then(async r => {
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({ detail: 'Upload failed' }))
+        throw new Error(err.detail || `Error ${r.status}`)
+      }
+      return r.json() as Promise<import('@/types').Contract>
+    }),
   listContracts: () => request<{ contracts: import('@/types').Contract[]; total: number }>('/contracts'),
   getContract: (id: string) => request<import('@/types').Contract>(`/contracts/${id}`),
   deleteContract: (id: string) => request(`/contracts/${id}`, { method: 'DELETE' }),
