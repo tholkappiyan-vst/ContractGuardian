@@ -184,6 +184,21 @@ async def explain_contract(
             "risk_score": risk.score if risk else 5,
         })
 
+    if not clause_risks:
+        return {
+            "overall_score": 0,
+            "risk_level": "low",
+            "main_concerns": [],
+            "dimension_breakdown": [],
+            "recommendation": "No clauses found to analyze.",
+            "action_items": [],
+            "reasoning_chain": [],
+            "top_risk_drivers": [],
+            "global_feature_importance": [],
+            "clause_explanations": [],
+            "metadata": {"clauses_explained": 0, "total_clauses": 0},
+        }
+
     # Get scoring result
     ai_risks = [
         {"clause_id": cr["clause_id"], "score": cr["score"], "category": cr["category"]}
